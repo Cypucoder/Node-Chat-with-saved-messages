@@ -1,0 +1,124 @@
+<!doctype html>
+<html>
+  <head>
+    <title>Socket.IO chat</title>
+    <style>
+       * { margin: 0; padding: 0; box-sizing: border-box; }
+      body { font: 13px Helvetica, Arial; }
+      form { background: #000; padding: 3px; position: fixed; bottom: 0; width: 100%; }
+      form input { border: 0; padding: 10px; width: 90%; margin-right: .5%; }
+      form button { width: 9%; background: rgb(130, 224, 255); border: none; padding: 10px; }
+      #messages { list-style-type: none; margin: 0; padding: 0; }
+      #messages li { padding: 5px 10px; }
+      #messages li:nth-child(odd) { background: #eee; }
+        
+        #messages
+        {
+         height:500px;
+        }
+        #contentWrap
+        {
+            display: none;
+        }
+        #chatWrap
+        {
+         float: left; 
+         border: 1px #000 solid;
+        }
+    </style>
+      
+  </head>
+  <body>
+
+    <div id="nickWrap">
+        <p>Please enter username:</p>
+        <p id="nickError"></p>
+      <form id="setNick">
+          <input size="35" id="nickname"/>
+          <input type="submit"/>
+        </form>
+      </div>
+      
+<div id="contentWrap">
+    <div id="chatWrap">
+    <div id="messages"></div>
+    <form id="fMessage" action="">
+      <input id="iMessage" autocomplete="off" /><button>Send</button>
+    </form>
+</div>
+<div id="users"></div>
+</div>
+      
+      
+<script src="/socket.io/socket.io.js"></script>
+<script src="https://cdn.socket.io/socket.io-1.2.0.js"></script>
+<script src="http://code.jquery.com/jquery-1.11.1.js"></script>
+<script>
+    jQuery(function($){
+    var socket = io();
+    var $messageForm = $('#fMessage');
+    var $messageBox = $('#iMessage');
+    var $messageDisplay = $('#messages');
+    var $nickForm = $('#setNick');
+    var $nickError = $('#nickError');
+    var $nickBox = $('#nickname');
+    var $users = $('#users');
+    //var addMessage = function(msg)
+    //{
+    //   $messageDisplay.append('<li>' + msg.User + ': ' + msg.Status + '</li>');
+    //};
+        
+        
+    $nickForm.submit(function(e){
+        e.preventDefault();
+        socket.emit('new user', $nickBox.val(), function(data){
+            if(data){
+                $('#nickWrap').hide();
+                $('#contentWrap').show();
+                //$messageDisplay.append('<li>' + get_nick() + ': ' + get_nick() + '</li>');
+            } else{
+                $nickError.html('That username is already taken! Try again.');
+            }
+        });
+        $nickBox.val('');
+        socket.emit('connect');
+    });
+        
+        socket.on('usernames', function(data){
+            var html = '';
+            for(i=0; i < data.length; i++){
+             html += data[i] + '<br/>'
+            }
+            $users.html(html);
+        });
+        
+        socket.on("l5", function(data){
+             data.data.forEach(function (item){addMessage(item);});
+        });
+    
+    $messageForm.submit(function(){
+        socket.emit('chat message', $messageBox.val());
+        $messageBox.val('');
+        return false;
+        }); 
+        
+    socket.on('chat message', function(msg){
+            //$messageDisplay.append($('<li>').text(msg));
+            $messageDisplay.append('<li>' + msg.User + ': ' + msg.Status + '</li>');
+    });
+        
+    });
+
+//var socket = io();
+  //$('form').submit(function(){
+    //socket.emit('chat message', $('#m').val());
+    //$('#m').val('');
+    //return false;
+  //});
+  //socket.on('chat message', function(msg){
+    //$('#messages').append($('<li>').text(msg));
+  //});
+</script>
+
+  </body>
+</html>
